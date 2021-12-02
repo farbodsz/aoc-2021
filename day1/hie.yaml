@@ -1,0 +1,4 @@
+cradle:
+  stack:
+    - path: "./src/Main.hs"
+      component: "day1:exe:day1"

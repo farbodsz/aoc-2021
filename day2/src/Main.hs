@@ -1,17 +1,33 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 main :: IO ()
-main = interact $ show . solve . map words . lines
+main = interact $ show . solve . map (parse . words) . lines
 
--- Part 1
--- Format: [[forward, 5], [down, 8], ...]
-solve :: [[String]] -> Int
-solve = uncurry (*) . foldr (sumTuple . parseCommand) (0, 0)
-    where sumTuple (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+data Command = Forward Int | Up Int | Down Int
 
--- Returns (x, y) from command text
-parseCommand :: [String] -> (Int, Int)
-parseCommand ["forward", x] = (read x, 0)
-parseCommand ["down"   , x] = (0, read x)
-parseCommand ["up"     , x] = (0, negate (read x))
-parseCommand _              = error "Unexpected format"
+data Position = Position
+    { posX :: Int
+    , posY :: Int
+    }
+
+instance Semigroup Position where
+    (Position x1 y1) <> (Position x2 y2) = Position (x1 + x2) (y1 + y2)
+
+instance Monoid Position where
+    mempty = Position 0 0
+
+parse :: [String] -> Command
+parse ["forward", x] = Forward $ read x
+parse ["down"   , x] = Down $ read x
+parse ["up"     , x] = Up $ read x
+parse _              = error "Unexpected format"
+
+-- | Part 1
+solve :: [Command] -> Int
+solve = (\Position {..} -> posX * posY) . mconcat . map cmdPos
+
+cmdPos :: Command -> Position
+cmdPos (Forward x) = Position x 0
+cmdPos (Down    x) = Position 0 x
+cmdPos (Up      x) = Position 0 (negate x)

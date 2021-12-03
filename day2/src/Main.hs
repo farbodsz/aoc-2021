@@ -1,8 +1,14 @@
+--------------------------------------------------------------------------------
+
 {-# LANGUAGE RecordWildCards #-}
 module Main where
 
 main :: IO ()
-main = interact $ show . solve . map (parse . words) . lines
+main = interact $ show . solve' . map (parse . words) . lines
+
+--------------------------------------------------------------------------------
+-- Part 1
+--------------------------------------------------------------------------------
 
 data Command = Forward Int | Up Int | Down Int
 
@@ -23,7 +29,6 @@ parse ["down"   , x] = Down $ read x
 parse ["up"     , x] = Up $ read x
 parse _              = error "Unexpected format"
 
--- | Part 1
 solve :: [Command] -> Int
 solve = (\Position {..} -> posX * posY) . mconcat . map cmdPos
 
@@ -31,3 +36,23 @@ cmdPos :: Command -> Position
 cmdPos (Forward x) = Position x 0
 cmdPos (Down    x) = Position 0 x
 cmdPos (Up      x) = Position 0 (negate x)
+
+--------------------------------------------------------------------------------
+-- Part 2
+--------------------------------------------------------------------------------
+
+data Submarine = Submarine
+    { subX   :: Int
+    , subY   :: Int
+    , subAim :: Int
+    }
+
+solve' :: [Command] -> Int
+solve' = (\Submarine {..} -> subX * subY) . foldl combineSub (Submarine 0 0 0)
+
+combineSub :: Submarine -> Command -> Submarine
+combineSub (Submarine x y a) (Forward n) = Submarine (x + n) (y + a * n) a
+combineSub (Submarine x y a) (Down    n) = Submarine x y (a + n)
+combineSub (Submarine x y a) (Up      n) = Submarine x y (a - n)
+
+--------------------------------------------------------------------------------

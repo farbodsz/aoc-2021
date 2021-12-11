@@ -1,17 +1,25 @@
 module Main where
 
+import qualified Data.HashMap.Strict           as M
 import           Data.List.Split
 
 main :: IO ()
 main = interact $ show . solve 256 . map read . splitOn ","
 
 solve :: Int -> [Int] -> Int
-solve n = length . runNDays n
+solve n = sum . M.elems . runNDays n . listFreqs
 
-runNDays :: Int -> [Int] -> [Int]
+listFreqs :: [Int] -> M.HashMap Int Int
+listFreqs xs = M.fromListWith (+) [ (x, 1) | x <- xs ]
+
+runNDays :: Int -> M.HashMap Int Int -> M.HashMap Int Int
 runNDays n = (!! n) . iterate runDay
 
-runDay :: [Int] -> [Int]
-runDay [] = []
-runDay (x : xs) | x == 0    = 6 : 8 : runDay xs
-                | otherwise = x - 1 : runDay xs
+runDay :: M.HashMap Int Int -> M.HashMap Int Int
+runDay xs =
+    M.delete (-1)
+        . M.insert 8 newFish
+        . M.insertWith (+) 6 newFish
+        . M.mapKeys (subtract 1)
+        $ xs
+    where newFish = M.findWithDefault 0 0 xs
